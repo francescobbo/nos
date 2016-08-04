@@ -76,7 +76,7 @@ know how to build a cross compiler, or do not want to mess with your machine
 files, feel free to use my Docker image `aomega08/osdev`. Just install Docker
 and run (will take a few minutes):
 
-    `docker pull aomega08/osdev`
+    docker pull aomega08/osdev
 
 If you prefer the good old way of building your toolchain, you can follow
 [this tutorial on OSDev.org](http://wiki.osdev.org/GCC_Cross-Compiler). Remember

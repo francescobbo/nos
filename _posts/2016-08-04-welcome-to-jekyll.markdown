@@ -1,10 +1,9 @@
 ---
 layout: post
-title:  "An Expected Journey!"
+title:  "A Long, Expected Painful Journey!"
 date:   2016-08-04 17:56:26 +0200
 categories: nos
 ---
-## A Long, Expected Painful Journey
 
 I've been doing OS Development since I was 12, when (U)EFI and x64 were still
 dreams.

@@ -1,5 +1,5 @@
 MAKEFLAGS += -s
 
 all:
-	echo "Hello World"
+	$(MAKE) -C tools
 

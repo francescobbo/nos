@@ -71,6 +71,14 @@ First of all, get a working copy of [Bochs](https://sourceforge.net/projects/boc
 with unique features like the embedded x86 debugger, allowing to inspect the
 deepest structures of an Intel-like CPU.
 
+When running the configure script, remember to enable _at least_: x86-64, smp,
+debugger, disasm, monitor-mwait, x86-debugger, ne2000, a20-pin, pci, usb, cdrom.
+
+If you are compiling on a recent version of _OSX_, pass `--with-sdl`, ensure that
+you do NOT enable any soundcard (sb16 and es1370), and search and replace in the
+source, every occurrence of `#include <SDL` with `#include <SDL/SDL`. Also,
+install `sdl` using HomeBrew. This looks the only way of compiling Bochs on a Mac.
+
 Also, you will need an x86_64-elf cross-compiler in your `PATH`. If you don't
 know how to build a cross compiler, or do not want to mess with your machine
 files, feel free to use my Docker image `aomega08/osdev`. Just install Docker

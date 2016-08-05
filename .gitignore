@@ -1,2 +1,4 @@
 *.o
+tools/bin/*
+disk.img
 

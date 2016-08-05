@@ -1,5 +1,5 @@
-all: bootsector.o
+all: stage1.o
 
-bootsector.o: fastfs.asm
+stage1.o: stage1.asm
 	nasm -fbin $< -o $@
 

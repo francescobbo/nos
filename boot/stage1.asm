@@ -18,6 +18,8 @@ boot:
 	; Save the boot drive number
 	mov [drive], dl
 
+	call enableA20
+
 	; Read sector 1 to 0x0000:0600
 	mov edi, 0x00000600
 	mov ebx, 1
@@ -53,6 +55,42 @@ readSectors:
 	jc error
 
 	popa
+	ret
+
+enableA20:
+	call checkA20
+	cmp ax, 0
+	jz .ok
+
+	jmp error
+
+.ok:
+	ret
+
+checkA20:
+	pushf
+	push ds
+	cli
+
+	mov ax, 0xffff
+	mov ds, ax
+
+	mov di, 0x500
+	mov si, 0x510
+
+	mov [es:di], byte 0x00
+	mov [ds:si], byte 0xff
+
+	mov ax, 1
+
+	cmp [es:di], byte 0xff
+	je .done
+
+	mov ax, 0
+
+.done:
+	pop ds
+	popf
 	ret
 
 error:

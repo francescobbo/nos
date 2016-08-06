@@ -24,8 +24,15 @@ boot:
 	mov cx, 1
 	call readSectors
 
-	cli
-	hlt
+	; Read #CX sectors at 0x600 starting from LBA 2
+	mov edi, 0x00000600
+	mov bx, 0x600
+	mov cx, [bx]
+	mov ebx, 2
+	call readSectors
+
+	; Jump to stage2
+	jmp 0x0:0x600
 
 ; IN:
 ;   EDI: Segment/Offset of destination

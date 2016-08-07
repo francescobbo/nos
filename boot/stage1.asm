@@ -52,6 +52,8 @@ readSectors:
 	mov si, dap
 
 	int 0x13
+
+	mov si, diskerror
 	jc error
 
 	popa
@@ -62,6 +64,7 @@ enableA20:
 	cmp ax, 0
 	jz .ok
 
+	mov si, unsupported
 	jmp error
 
 .ok:
@@ -94,6 +97,19 @@ checkA20:
 	ret
 
 error:
+.repeat:
+	mov al, [si]
+	inc si
+
+	cmp al, 0
+	jz .done
+
+	mov ah, 0x0e
+	mov bx, 0xf4
+	int 0x10
+	jmp .repeat
+
+.done:
 	cli
 	hlt
 
@@ -109,6 +125,9 @@ dap:
 	readSegment dw 0
 	readLBA			dd 0
 	readLBA2		dd 0
+
+diskerror DB "Error while pumping the N2O", 0
+unsupported DB "Your sistem is way too old for NOS", 0
 
 times (510 - ($ - $$)) DB 0
 dw 0xaa55

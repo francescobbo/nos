@@ -33,6 +33,9 @@ boot:
 	mov ebx, 2
 	call readSectors
 
+	; Pass disk number through stage2
+	mov dl, [drive]
+
 	; Jump to stage2
 	jmp 0x0:0x600
 

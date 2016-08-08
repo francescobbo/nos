@@ -62,7 +62,54 @@ readSectors:
 	popa
 	ret
 
+error:
+.repeat:
+	mov al, [si]
+	inc si
+
+	cmp al, 0
+	jz .done
+
+	mov ah, 0x0e
+	mov bx, 0xf4
+	int 0x10
+	jmp .repeat
+
+.done:
+	cli
+	hlt
+
 enableA20:
+	call checkA20
+	cmp ax, 0
+	jz .ok
+
+	; Try with the BIOS
+	mov ax, 0x2401
+	int 0x15
+
+	call checkA20
+	cmp ax, 0
+	jz .ok
+
+	; Try with the Keyboard
+	call keyboardA20
+
+	call checkA20
+	cmp ax, 0
+	jz .ok
+
+	; Try the Fast Gate
+	in al, 0x92
+	test al, 2
+	; Omg already enabled
+	jnz .fastDone
+	or al, 2
+	; Prevent System Reset
+	and al, 0xFE
+	out 0x92, al
+.fastDone:
+
 	call checkA20
 	cmp ax, 0
 	jz .ok
@@ -99,22 +146,55 @@ checkA20:
 	popf
 	ret
 
-error:
-.repeat:
-	mov al, [si]
-	inc si
-
-	cmp al, 0
-	jz .done
-
-	mov ah, 0x0e
-	mov bx, 0xf4
-	int 0x10
-	jmp .repeat
-
-.done:
+keyboardA20:
 	cli
-	hlt
+
+	; Disable the Keyboard
+	call keyboardWait
+	mov al, 0xAD
+	out 0x64, al
+
+	; Read command
+	call keyboardWait
+	mov al, 0xD0
+	out 0x64, al
+
+	; Read data
+	call keyboardWaitIn
+	in al, 0x60
+	push ax
+
+	; Write command
+	call keyboardWait
+	mov al, 0xD1
+	out 0x64, al
+
+	; Write data (enabling the A20 line)
+	call keyboardWait
+	pop ax
+	or al, 2
+	out 0x60, al
+
+	; Reenable the keyboard
+	call keyboardWait
+	mov al, 0xAE
+	out 0x64, al
+
+	call keyboardWait
+	sti
+	ret
+
+keyboardWait:
+	in al, 0x64
+	test al, 2
+	jnz keyboardWait
+	ret
+
+keyboardWaitIn:
+	in al, 0x64
+	test al, 1
+	jz keyboardWaitIn
+	ret
 
 ; Drive number
 drive db 0

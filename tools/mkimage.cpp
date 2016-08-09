@@ -1,5 +1,8 @@
 #include <fstream>
 #include <iostream>
+#include <string.h>
+#include <stdexcept>
+#include <string>
 
 using namespace std;
 

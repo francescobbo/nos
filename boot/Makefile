@@ -1,5 +1,8 @@
 all: stage1.o stage2.o
 
+clean:
+	rm -f stage1.o stage2.o
+
 stage1.o: stage1.asm
 	nasm -fbin $< -o $@
 

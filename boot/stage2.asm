@@ -1,5 +1,5 @@
 [BITS 16]
-[ORG 0x600]
+[ORG 0x500]
 
 mov bx, 0xb800
 mov es, bx

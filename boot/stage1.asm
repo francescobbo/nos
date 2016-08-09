@@ -20,15 +20,15 @@ boot:
 
 	call enableA20
 
-	; Read sector 1 to 0x0000:0600
-	mov edi, 0x00000600
+	; Read sector 1 to 0x0000:0500
+	mov edi, 0x00000500
 	mov ebx, 1
 	mov cx, 1
 	call readSectors
 
 	; Read #CX sectors at 0x600 starting from LBA 2
-	mov edi, 0x00000600
-	mov bx, 0x600
+	mov edi, 0x00000500
+	mov bx, 0x500
 	mov cx, [bx]
 	mov ebx, 2
 	call readSectors
@@ -37,7 +37,7 @@ boot:
 	mov dl, [drive]
 
 	; Jump to stage2
-	jmp 0x0:0x600
+	jmp 0x0:0x500
 
 ; IN:
 ;   EDI: Segment/Offset of destination

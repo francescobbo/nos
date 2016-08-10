@@ -6,7 +6,7 @@ all:
 	$(MAKE) -C arch/x86_64
 	$(MAKE) -C kernel
 
-	./tools/bin/install disk.img boot/stage1.o boot/stage2.o
+	./tools/bin/install disk.img boot/stage1.o boot/stage2.o nos
 
 clean:
 	$(MAKE) -C boot clean

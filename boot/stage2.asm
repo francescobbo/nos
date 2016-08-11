@@ -93,6 +93,11 @@ loadKernel:
 	cmp cx, 8
 	jg error
 
+	mov eax, [di + 24]
+	mov [entryPoint], eax
+	mov eax, [di + 28]
+	mov [entryPoint + 4], eax
+
 	add di, 0x40
 	mov [currentSection], di
 
@@ -302,6 +307,9 @@ longMode:
 	mov gs, ax
 	mov ss, ax
 
+	mov rax, [entryPoint]
+	call rax
+
 	hlt
 
 align 4
@@ -343,3 +351,5 @@ BootData:
 	bootDisk    db 0
 	mmaps       dd 0
 	mmapsCount  dw 0
+
+entryPoint    dq 0

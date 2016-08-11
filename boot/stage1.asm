@@ -19,6 +19,13 @@ boot:
 	mov [bootDisk], dl
 
 	call enableA20
+	call enableSSE
+
+	; Some BIOSes enable some optimizations when told that the OS will be running
+	; in Long Mode (64bit). Most BIOSes will do nothing.
+	mov ax, 0xec00
+	mov bx, 2
+	int 0x15
 
 	; Read sector 1 to 0x0000:0500
 	mov edi, 0x00000500
@@ -38,6 +45,18 @@ boot:
 
 	; Jump to stage2
 	jmp 0x0:0x500
+
+enableSSE:
+	mov eax, cr0
+	and eax, ~4
+	or eax, 2
+	mov cr0, eax
+
+	mov eax, cr4
+	or eax, 0x600
+	mov cr4, eax
+
+	ret
 
 %include 'io.asm'
 %include 'a20.asm'

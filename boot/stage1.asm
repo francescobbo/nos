@@ -103,9 +103,9 @@ enableSSE:
 
 	ret
 
+%include 'errors.asm'
 %include 'io.asm'
 %include 'a20.asm'
-%include 'errors.asm'
 
 ; Drive number
 bootDisk db 0

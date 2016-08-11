@@ -233,6 +233,17 @@ boot32:
 
 [BITS 32]
 protectedMode:
+	; Reload data segment registers
+	mov ax, 0x10
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+	mov ss, ax
+
+	; Setup pagination
+	call setupPageTables
+
 	; Enable PAE, required for Long Mode
 	mov eax, cr4
 	or eax, 1 << 5
@@ -252,6 +263,25 @@ protectedMode:
 	; We're now in IA32e mode. The 32bit submode of Long Mode
 	lgdt [longGDTRegister]
 	jmp 0x08:longMode
+
+setupPageTables:
+	mov edi, 0x2000
+	mov cr3, edi
+
+	; Clear 4k (PML4, PDPT, PD, PT)
+	xor eax, eax
+	mov ecx, 4096
+	rep stosd
+
+	mov edi, cr3
+
+	mov [edi], dword 0x3003
+	add edi, 0x1000
+	mov [edi], dword 0x4003
+	add edi, 0x1000
+	mov [edi], dword 0x83
+
+	ret
 
 [BITS 64]
 longMode:
@@ -295,8 +325,8 @@ longGDTRegister:
 
 longGDT:
 	dd 0, 0
-	dw 0, 0, 0x9A, 0x0020
-	dw 0, 0, 0x92, 0
+	dw 0, 0, 0x9A00, 0x00A0
+	dw 0, 0, 0x9200, 0x00A0
 longGDTEnd:
 
 align 4

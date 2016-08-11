@@ -5,7 +5,7 @@
 mov [bootDisk], dl
 
 ; Load the memory maps
-mov edi, 0x5000
+mov edi, 0x1000
 mov [mmaps], edi
 call readMemoryMaps
 
@@ -15,8 +15,7 @@ call getUnreal
 ; Load the Kernel
 call loadKernel
 
-cli
-hlt
+jmp boot32
 
 ; Load 4gb segment in DS, while still in Real Mode
 ; Requires a switch to protected mode.
@@ -25,7 +24,7 @@ getUnreal:
 	push ds
 
 	; Load Protected Mode GDT
-	lgdt [gdtinfo]
+	lgdt [unrealGDTRegister]
 
 	; Jump into Protected Mode
 	mov eax, cr0
@@ -57,7 +56,7 @@ remainingSections  DW 0
 loadKernel:
 	call findKernel
 
-	mov edi, 0x4000
+	mov edi, 0x2000
 	mov ecx, 1
 	mov ebx, [firstKernelSector]
 	call readSectors
@@ -186,12 +185,12 @@ loadSection:
 findKernel:
 	pusha
 
-	mov edi, 0x4000
+	mov edi, 0x2000
 	mov cx, 1
 	mov ebx, 1
 	call readSectors
 
-	mov ebx, 0x4000
+	mov ebx, 0x2000
 	mov ebx, [ebx]
 	add ebx, 2
 
@@ -200,10 +199,10 @@ findKernel:
 	mov [firstKernelSector], ecx
 
 	mov cx, 1
-	mov edi, 0x4000
+	mov edi, 0x2000
 	call readSectors
 
-	mov eax, 0x4000
+	mov eax, 0x2000
 	mov eax, [eax]
 	mov ecx, 512
 	mul ecx
@@ -217,15 +216,90 @@ findKernel:
 %include 'utils.asm'
 %include 'errors.asm'
 
-gdtinfo:
-	dw gdt_end - gdt - 1
-	dd gdt
+boot32:
+	; Disable interrupts
+	cli
 
-gdt:
+	; Load a protected mode GDT
+	lgdt [protectedGDTRegister]
+
+	; Enter protected mode
+	mov eax, cr0
+	or al, 1
+	mov cr0, eax
+
+	; Reload CS
+	jmp 0x08:protectedMode
+
+[BITS 32]
+protectedMode:
+	; Enable PAE, required for Long Mode
+	mov eax, cr4
+	or eax, 1 << 5
+	mov cr4, eax
+
+	; Set Long Mode bit. Note that we're in Protected Mode until paging is enabled.
+	mov ecx, 0xC0000080
+	rdmsr
+	or eax, 1 << 8
+	wrmsr
+
+	; Enable Paging and Long Mode
+	mov eax, cr0
+	or eax, 1 << 31
+	mov cr0, eax
+
+	; We're now in IA32e mode. The 32bit submode of Long Mode
+	lgdt [longGDTRegister]
+	jmp 0x08:longMode
+
+[BITS 64]
+longMode:
+	; Reload data segment registers
+	mov ax, 0x10
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+	mov ss, ax
+
+	hlt
+
+align 4
+unrealGDTRegister:
+	dw unrealGDTEnd - unrealGDT - 1
+	dd unrealGDT
+
+align 4
+unrealGDT:
 	dd 0, 0
 	dw 0xffff, 0, 0x9200, 0x00CF
-gdt_end:
+unrealGDTEnd:
 
+align 4
+protectedGDTRegister:
+	dw protectedGDTEnd - protectedGDT - 1
+	dd protectedGDT
+
+align 4
+protectedGDT:
+	dd 0, 0
+	dw 0xffff, 0, 0x9A00, 0x00CF
+	dw 0xffff, 0, 0x9200, 0x00CF
+protectedGDTEnd:
+
+align 4
+longGDTRegister:
+	dw longGDTEnd - longGDT - 1
+	dq longGDT
+
+longGDT:
+	dd 0, 0
+	dw 0, 0, 0x9A, 0x0020
+	dw 0, 0, 0x92, 0
+longGDTEnd:
+
+align 4
 BootData:
 	bootDisk    db 0
 	mmaps       dd 0

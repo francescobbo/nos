@@ -276,10 +276,19 @@ setupPageTables:
 	mov edi, cr3
 
 	mov [edi], dword 0x3003
+	mov [edi + 0xFF8], dword 0x3003
 	add edi, 0x1000
 	mov [edi], dword 0x4003
 	add edi, 0x1000
-	mov [edi], dword 0x83
+
+	mov cx, 32
+	mov eax, 0x83
+
+.next:
+	mov [edi], eax
+	add edi, 8
+	add eax, 0x200000
+	loop .next
 
 	ret
 

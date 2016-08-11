@@ -18,6 +18,7 @@ boot:
 	; Save the boot drive number
 	mov [bootDisk], dl
 
+	call checkLongMode
 	call enableA20
 	call enableSSE
 
@@ -45,6 +46,50 @@ boot:
 
 	; Jump to stage2
 	jmp 0x0:0x500
+
+checkLongMode:
+	; First of all, check the CPUID instruction existance, by flipping the ID flag
+	; in the EFLAGS register. If the flipping does not work (the flag is kept to 0),
+	; then, CPUID (and Long Mode) is not available.
+
+	; EAX = EFLAGS
+	pushfd
+	pop eax
+
+	mov ecx, eax
+	xor eax, 1 << 21
+
+	; EFLAGS = EFLAGS ^ (1 << 21)  (the ID flag)
+	push eax
+	popfd
+
+	; EAX = EFLAGS
+	pushfd
+	pop eax
+
+	; EFLAGS = ECX (backup of old flags)
+	push ecx
+	popfd
+
+	mov si, unsupported
+
+	xor eax, ecx
+	jz error
+
+	; Check that we can call extended CPUID
+	mov eax, 0x80000000
+	cpuid
+	cmp eax, 0x80000001
+	jb error
+
+	; Check long mode presence
+	mov eax, 0x80000001
+	cpuid
+	test edx, 1 << 29
+	jz error
+
+	; Great. We have long mode!
+	ret
 
 enableSSE:
 	mov eax, cr0
